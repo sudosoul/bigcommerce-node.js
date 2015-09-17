@@ -133,7 +133,7 @@ module.exports = {
   		});
   	}).end();
 	},
-
+ 
 	/**
 	 * Formats the options for a given HTTP request.
 	 * NOTE: The base Bigcommerce API host has been already set, and
