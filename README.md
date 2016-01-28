@@ -61,11 +61,11 @@ var settings = {
   pass: 'abc123-babyYouAndMe',
   dataType: 'json' || 'xml'
 };
-var store123 = new connection(settings);
+var api = new connection(settings);
 ```
 #### Get Some Products ####
 ```javascript
-store123.get('/products') //Make GET request to /products endpoint
+api.get('/products') //Make GET request to /products endpoint
   .then(function(res) {   //Assign the response data to 'res'
     for (i=0; i<res.body.length; i++) { //The actual BC response is saved in 'res.body'
       console.log(res.body[i].name);
