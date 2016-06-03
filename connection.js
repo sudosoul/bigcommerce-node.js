@@ -57,19 +57,19 @@ var builder = new xml2js.Builder();
 function Connection(settings) {
   // Return new instance if this called without 'new'.
   if (!(this instanceof Connection)) {
-    return new Connection(config);
+    return new Connection(settings);
+  }
+  
+  // Ensure credentials object provided:
+  if (typeof settings === 'undefined') {
+    throw new Error('Class must be initialized with settings object. See README.');
   }
 
   // Default dataType to JSON if not set:
   if (typeof settings.dataType === 'undefined') {
     settings.dataType = 'json';
   }
-
-  // Ensure credentials object provided:
-  if (!settings) {
-    throw new Error('Class must be initialized with credentials object. See README.');
-  }
-  // Initialize class with credentials:
+  // Initialize class with settings:
   this.init(settings);
 }
 
@@ -112,7 +112,7 @@ Connection.prototype = {
   dataType: null,
 
   /**
-   * Initializes class with BC API credentials and dateType.
+   * Initializes class with BC API credentials and dataType.
    * @param object settings - Contains BC API credentials and dataType.
    * @throws Error if missing any of the three required API attributes:
    *    path - string - The API path/URL.
