@@ -92,7 +92,7 @@ api.put('/products/id', update)         // Updates are a PUT request
 #### UPDATE A PRODUCT - XML ####
 ```javascript
 // We will convert this into an XML string for you:
-var update = {
+const update = {
   product: {
     inventory_level: 900
   }
