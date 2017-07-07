@@ -14,25 +14,25 @@ You can install them from the CLI like so:
 # Setup
 To use this program, you should include it in your main app file:
 ```javascript
-var connection = require('./connection');
+const connection = require('./connection');
 ```
 
 From there, you must initialize the class with the following settings:
 ```javascript
-var settings = {
+const settings = {
     path:     "The API PATH -- WITHOUT THE '/api/v2'"
     user:     "The API UserName"
     pass:     "The API Token" 
     dataType: "OPTIONAL: XML or JSON. Default is JSON"
 }
 
-var api = new connection(settings); //Instantiate class!
+const api = new connection(settings); //Instantiate class!
 ```
 
 The connection class also allows you work with multiple stores, so you can instantiate as many instances as you wish, all with their own set of settings:
 ```javascript
-var store1 = new connection(settings1);
-var store2 = new connection(settings2);
+const store1 = new connection(settings1);
+const store2 = new connection(settings2);
 ```
 # IMPORTANT NOTES - READ FIRST:
 Since most users might skim through the usage examples, please read this part first so you can understand how the connection file works under the hood. 
@@ -49,14 +49,14 @@ Since most users might skim through the usage examples, please read this part fi
 Let's look at a few examples of how to work with this. 
 These examples below all assume that the following has been placed into your app:
 ```javascript
-var connection = require('./connection');
-var settings = {
+const connection = require('./connection');
+const settings = {
   path: 'https://store-123abc.mybigcommerce.com',
   user: 'username',
   pass: 'password',
   dataType: 'json' || 'xml'
 };
-var api = new connection(settings);
+const api = new connection(settings);
 
 ```
 #### Get Some Products ####
