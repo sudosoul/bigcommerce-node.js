@@ -42,10 +42,9 @@
  */
 
 // Load dependencies:
-var Promise = require('promise');
-var request = require('request');
-var xml2js  = require('xml2js');      
-var builder = new xml2js.Builder();
+const request = require('request-promise-native'),
+      xml2js  = require('xml2js'),   
+      builder = new xml2js.Builder();
 
 
 /**
@@ -59,7 +58,6 @@ function Connection(settings) {
   if (!(this instanceof Connection)) {
     return new Connection(settings);
   }
-  
   // Ensure credentials object provided:
   if (typeof settings === 'undefined') {
     throw new Error('Class must be initialized with settings object. See README.');
@@ -67,6 +65,7 @@ function Connection(settings) {
 
   // Default dataType to JSON if not set:
   if (typeof settings.dataType === 'undefined') {
+    console.log('Data Type not set, defaulting to JSON.');
     settings.dataType = 'json';
   }
   // Initialize class with settings:
@@ -139,7 +138,7 @@ Connection.prototype = {
     }
 
     // Format username and password into Base64:
-    var auth = settings.user +':' +settings.pass;
+    let auth = settings.user +':' +settings.pass;
     auth     = new Buffer(auth).toString('base64');
 
     // Set settings as class variables:
@@ -157,30 +156,10 @@ Connection.prototype = {
    * @return Promise - Promise containing the API response. 
    */
   get: function(endpoint) {
-    var self = this;
-    return new Promise(function(fulfill, reject) {
-      // Set request options:
-      var options = {
-        url: self.apiPath +self.apiVersion +endpoint,
-        headers: {
-          'Authorization': 'Basic ' +self.apiAuth,
-          'Accept'       : 'application/' +self.dataType,
-          'Content-Type' : 'application/' +self.dataType
-        }
-      };
-
-      // Perform the request:
-      request(options, function(err, res, body) {
-        // Reject if request failed, or BC returns non 200 status:
-        if (err || res.statusCode !== 200) {
-          reject(err);
-        } else {
-          fulfill({res: res, body: self.dataType === 'json' ? JSON.parse(body) : body});
-        }
-      });
-    });
+    return request(this.getRequestOptions('get', endpoint))
+    .then(this.handleResponse.bind(this))
+    .catch(this.throwError.bind(this))
   },
-
 
   /**
    * Performs an HTTP PUT request to the provided BC endpoint.
@@ -188,34 +167,13 @@ Connection.prototype = {
    * WITH the beginning forward slash (/). Example: endpoint = '/products'.
    *
    * @param endpoint string - The API resource endpoint to request. 
-   * @param data object     - The request XML/JSON data object.
+   * @param body object     - The request XML/JSON body.
    * @return Promise        - Promise containing the API response. 
    */
-  put: function(endpoint, data) {
-    var self = this;
-    return new Promise(function(fulfill, reject) {
-      // Set request options:
-      var options = {
-        url: self.apiPath +self.apiVersion +endpoint,
-        method: 'PUT',
-        headers: {
-          'Authorization': 'Basic ' +self.apiAuth,
-          'Accept'       : 'application/' +self.dataType,
-          'Content-Type' : 'application/' +self.dataType
-        },
-        body: self.dataType === 'json' ? JSON.stringify(data) : builder.buildObject(data)
-      };
-
-      // Perform the request:
-      request(options, function(err, res, body) {
-        // Reject if request failed, or BC returns non 200 status:
-        if (err || res.statusCode !== 200) {
-          reject(err);
-        } else {
-          fulfill({res: res, body: self.dataType === 'json' ? JSON.parse(body) : body});
-        }
-      });
-    });
+  put: function(endpoint, body) {
+    return request(this.getRequestOptions('put', endpoint, body))
+    .then(this.handleResponse.bind(this))
+    .catch(this.throwError.bind(this))
   },
 
   /**
@@ -224,34 +182,13 @@ Connection.prototype = {
    * WITH the beginning forward slash (/). Example: endpoint = '/products'.
    *
    * @param endpoint string - The API resource endpoint to request. 
-   * @param data object     - The request XML/JSON data object.
+   * @param body object     - The request XML/JSON body.
    * @return Promise        - Promise containing the API response. 
    */
-  post: function(endpoint, data) {
-    var self = this;
-    return new Promise(function(fulfill, reject) {
-      // Set request options:
-      var options = {
-        url: self.apiPath +self.apiVersion +endpoint,
-        method: 'POST',
-        headers: {
-          'Authorization': 'Basic ' +self.apiAuth,
-          'Accept'       : 'application/' +self.dataType,
-          'Content-Type' : 'application/' +self.dataType
-        },
-        body: self.dataType === 'json' ? JSON.stringify(data) : builder.buildObject(data)
-      };
-
-      // Perform the request:
-      request(options, function(err, res, body) {
-        // Reject if request failed, or BC returns non 200 status:
-        if (err || res.statusCode !== 200) {
-          reject(err);
-        } else {
-          fulfill({res: res, body: self.dataType === 'json' ? JSON.parse(body) : body});
-        }
-      });
-    });
+  post: function(endpoint, body) {
+    return request(this.getRequestOptions('post', endpoint, body))
+    .then(this.handleResponse.bind(this))
+    .catch(this.throwError.bind(this))
   },
 
   /**
@@ -263,33 +200,56 @@ Connection.prototype = {
    * @return Promise        - Promise containing the API response. 
    */
   delete: function(endpoint) {
-    var self = this;
-    return new Promise(function(fulfill, reject) {
-      // Set request options:
-      var options = {
-        url: self.apiPath +self.apiVersion +endpoint,
-        method: 'DELETE',
-        headers: {
-          'Authorization': 'Basic ' +self.apiAuth,
-          'Accept'       : 'application/' +self.dataType,
-          'Content-Type' : 'application/' +self.dataType
-        }
-      };
-
-      // Perform the request:
-      request(options, function(err, res, body) {
-        // Reject if request failed, or BC returns non 200 status:
-        if (err || res.statusCode !== 200) {
-          reject(err);
-        } else {
-          fulfill({res: res, body: self.dataType === 'json' ? JSON.parse(body) : body});
-        }
-      });
-    });
+    return request(this.getRequestOptions('delete', endpoint))
+    .then(this.handleResponse.bind(this))
+    .catch(this.throwError.bind(this))
   },
+
+  /**
+   * Configure and retrieve the shared request option object.
+   * @param method   - String - The request method (GET | PUT | POST | DELETE).
+   * @param endpoint - String - The API URI endpoint.
+   * @param body     - Object|String - <optional> The XML|JSON request body for PUT|POST requests.
+   * @return Object  - The option object argument required to perform a request.
+   */
+  getRequestOptions: function(method, endpoint, body = null) {
+    return {
+      url:    this.apiPath +this.apiVersion +endpoint,
+      method: method,
+      headers: {
+        'Authorization': 'Basic '       +this.apiAuth,
+        'Accept'       : 'application/' +this.dataType,
+        'Content-Type' : 'application/' +this.dataType
+      },
+      body: (body ? (this.dataType === 'json' ? JSON.stringify(body) : builder.buildObject(body)) : null), // Format Request Body.
+      resolveWithFullResponse: true
+    };
+  },
+
+  /**
+   * Handle the API Response
+   * @param response - mixed
+   * @throws Error if response status code != 200.
+   * @return Object|String - The parsed JSON response or raw XML response.
+   */
+  handleResponse: function(response) {
+    if (response.statusCode !== 200) {
+      throw new Error('BigCommerce returned an error - ' +response.body);
+      //return response.body; // Return API error response.
+    } else {
+      return this.dataType === 'json' ? JSON.parse(response.body) : response.body; // Return API response body in the specified format.
+    }
+  },
+
+  /**
+   * Forwards the request error for catching by the original caller.
+   * @param error  - mixed
+   * @throws Error - The internal request error.
+   */
+  throwError: function(error) {
+    throw new Error('An internal error occured with the request - ' +error);
+  }
+
 };
 
 module.exports = Connection;
-
-
-
