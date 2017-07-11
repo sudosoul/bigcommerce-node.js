@@ -8,24 +8,6 @@
  *    pass - string - The API password/token. 
  *    dataType - string - OPTIONAL: Use XML or JSON. Defaults on JSON. 
  *
- ***********************************************************************************
- * Example Usage:
- *    // Load this file:
- *    var connection = require('./connection'); 
- *    
- *    // Define the API credentials, and instantiate this class:
- *    var credentials = {host: 'www.site.com', user: 'surerob', pass: 'abc123'};
- *    var api = new connection(credentials); 
- *
- *    // Get first 50 products and print their names:
- *    api.get('/products')
- *      .then(function(res) {
- *        for (i=0; i<res.body.length; i++) { //res.body holds the BC response body
- *          console.log(res.body[i].name);    //Print each product name.
- *        }
- *      });
- ***********************************************************************************
- *
  * @author Rob Mullins <rob@surerob.com>
  * @copyright Copyright 2016 - SureRob Solutions LLC
  * 
@@ -45,7 +27,6 @@
 const request = require('request-promise-native'),
       xml2js  = require('xml2js'),   
       builder = new xml2js.Builder();
-
 
 /**
  * Construct.
@@ -68,6 +49,7 @@ function Connection(settings) {
     console.log('Data Type not set, defaulting to JSON.');
     settings.dataType = 'json';
   }
+  
   // Initialize class with settings:
   this.init(settings);
 }
@@ -156,9 +138,7 @@ Connection.prototype = {
    * @return Promise - Promise containing the API response. 
    */
   get: function(endpoint) {
-    return request(this.getRequestOptions('get', endpoint))
-    .then(this.handleResponse.bind(this))
-    .catch(this.throwError.bind(this))
+    return request(this.getRequestOptions('get', endpoint)).then(this.handleResponse.bind(this))
   },
 
   /**
@@ -171,9 +151,7 @@ Connection.prototype = {
    * @return Promise        - Promise containing the API response. 
    */
   put: function(endpoint, body) {
-    return request(this.getRequestOptions('put', endpoint, body))
-    .then(this.handleResponse.bind(this))
-    .catch(this.throwError.bind(this))
+    return request(this.getRequestOptions('put', endpoint, body)).then(this.handleResponse.bind(this))
   },
 
   /**
@@ -186,9 +164,7 @@ Connection.prototype = {
    * @return Promise        - Promise containing the API response. 
    */
   post: function(endpoint, body) {
-    return request(this.getRequestOptions('post', endpoint, body))
-    .then(this.handleResponse.bind(this))
-    .catch(this.throwError.bind(this))
+    return request(this.getRequestOptions('post', endpoint, body)).then(this.handleResponse.bind(this))
   },
 
   /**
@@ -200,9 +176,7 @@ Connection.prototype = {
    * @return Promise        - Promise containing the API response. 
    */
   delete: function(endpoint) {
-    return request(this.getRequestOptions('delete', endpoint))
-    .then(this.handleResponse.bind(this))
-    .catch(this.throwError.bind(this))
+    return request(this.getRequestOptions('delete', endpoint)).then(this.handleResponse.bind(this))
   },
 
   /**
@@ -233,7 +207,7 @@ Connection.prototype = {
    * @return Object|String - The parsed JSON response or raw XML response.
    */
   handleResponse: function(response) {
-    if (response.statusCode !== 200) {
+    if (response.statusCode < 200 || response.statusCode > 299) {
       throw new Error('BigCommerce returned an error - ' +response.body);
       //return response.body; // Return API error response.
     } else {
@@ -242,6 +216,7 @@ Connection.prototype = {
   },
 
   /**
+   * NOT USED - CLIENT WILL CATCH THE ERROR!
    * Forwards the request error for catching by the original caller.
    * @param error  - mixed
    * @throws Error - The internal request error.
@@ -253,3 +228,4 @@ Connection.prototype = {
 };
 
 module.exports = Connection;
+
