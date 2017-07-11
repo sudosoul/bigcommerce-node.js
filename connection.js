@@ -138,7 +138,9 @@ Connection.prototype = {
    * @return Promise - Promise containing the API response. 
    */
   get: function(endpoint) {
-    return request(this.getRequestOptions('get', endpoint)).then(this.handleResponse.bind(this))
+    return request(this.getRequestOptions('get', endpoint))
+      .then(this.handleResponse.bind(this))
+      .catch(this.throwError.bind(this));
   },
 
   /**
@@ -151,7 +153,9 @@ Connection.prototype = {
    * @return Promise        - Promise containing the API response. 
    */
   put: function(endpoint, body) {
-    return request(this.getRequestOptions('put', endpoint, body)).then(this.handleResponse.bind(this))
+    return request(this.getRequestOptions('put', endpoint, body))
+      .then(this.handleResponse.bind(this))
+      .catch(this.throwError.bind(this));
   },
 
   /**
@@ -164,7 +168,9 @@ Connection.prototype = {
    * @return Promise        - Promise containing the API response. 
    */
   post: function(endpoint, body) {
-    return request(this.getRequestOptions('post', endpoint, body)).then(this.handleResponse.bind(this))
+    return request(this.getRequestOptions('post', endpoint, body))
+      .then(this.handleResponse.bind(this))
+      .catch(this.throwError.bind(this));
   },
 
   /**
@@ -176,7 +182,9 @@ Connection.prototype = {
    * @return Promise        - Promise containing the API response. 
    */
   delete: function(endpoint) {
-    return request(this.getRequestOptions('delete', endpoint)).then(this.handleResponse.bind(this))
+    return request(this.getRequestOptions('delete', endpoint))
+      .then(this.handleResponse.bind(this))
+      .catch(this.throwError.bind(this));
   },
 
   /**
@@ -207,22 +215,16 @@ Connection.prototype = {
    * @return Object|String - The parsed JSON response or raw XML response.
    */
   handleResponse: function(response) {
-    if (response.statusCode < 200 || response.statusCode > 299) {
-      throw new Error('BigCommerce returned an error - ' +response.body);
-      //return response.body; // Return API error response.
-    } else {
-      return this.dataType === 'json' ? JSON.parse(response.body) : response.body; // Return API response body in the specified format.
-    }
+    return this.dataType === 'json' ? JSON.parse(response.body) : response.body; // Return API response body in the specified format.
   },
 
   /**
-   * NOT USED - CLIENT WILL CATCH THE ERROR!
    * Forwards the request error for catching by the original caller.
    * @param error  - mixed
    * @throws Error - The internal request error.
    */
   throwError: function(error) {
-    throw new Error('An internal error occured with the request - ' +error);
+    throw new Error(error);
   }
 
 };
